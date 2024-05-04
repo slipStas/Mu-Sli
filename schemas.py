@@ -10,4 +10,10 @@ class SSongAdd(BaseModel):
 
 class SSong(SSongAdd):
     id: int
-    path: str
+
+
+class AddSongResponce(BaseModel):
+    result: str = "ok"
+    songs_count: int
+    songs_id: int
+

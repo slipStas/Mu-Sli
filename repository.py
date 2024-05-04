@@ -17,13 +17,12 @@ class SongsRepository:
             return song.id
 
     @classmethod
-    async def get_all_songs(cls) -> list[SSong]:
+    async def get_all_songs(cls):
         async with new_session() as session:
             query = select(SongsTable)
             result = await session.execute(query)
             songs_list = result.scalars().all()
-            songs_schemas = [SSong.model_validate(song_model) for song_model in songs_list]
 
-            return songs_schemas
+            return songs_list
 
 
