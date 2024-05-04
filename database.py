@@ -9,13 +9,14 @@ new_session = async_sessionmaker(engine, expire_on_commit=False)
 class Model(DeclarativeBase):
     pass
 
+
 class SongsTable(Model):
     __tablename__ = "songs"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    artist:  Mapped[str]
-    title:  Mapped[str]
-    path:  Mapped[str]
+    artist: Mapped[str]
+    title: Mapped[str]
+    path: Mapped[str]
     youtube_link: Mapped[str]
 
 

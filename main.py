@@ -9,8 +9,8 @@ from database import delete_tables, create_tables
 async def lifespan(app: FastAPI):
     # await delete_tables()
     # print("database was drop!")
-    await create_tables()
-    print("create database!")
+    # await create_tables()
+    # print("create database!")
 
     print("reload server!!!...")
     yield
@@ -22,12 +22,12 @@ app = FastAPI(lifespan=lifespan)
 class SSongAdd(BaseModel):
     artist: str
     title: str
-    path: str
     youtube_link: str
 
 
 class SSong(SSongAdd):
     id: int
+    path: str
 
 
 songs_array = []
@@ -35,12 +35,13 @@ songs_array = []
 
 @app.post("/song")
 async def add_song(song: Annotated[SSongAdd, Depends()]) -> dict:
-    song = SSong(id=1, artist="Anya Nami", title="Wake me up", path="data/", youtube_link="www.youtube.com/wqerty")
+    # song = SSong(id=1, artist="Anya Nami", title="Wake me up", path="data/", youtube_link="www.youtube.com/wqerty")
     # song_two = SSong(id=2, artist="Anya Singltone", title="Wale up", path="data/", youtube_link="www.youtube.com/wqeyuio")
     songs_array.append(song)
 
     return {"result": "ok",
-            "song_id": song.id}
+            "songs_count": len(songs_array),
+            "youtube_link": song.youtube_link}
 
 
 # @app.get("/songs")
