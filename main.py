@@ -1,8 +1,7 @@
-from typing import Annotated
-from fastapi import FastAPI, Depends
-from pydantic import BaseModel
+from fastapi import FastAPI
 from contextlib import asynccontextmanager
 from database import delete_tables, create_tables
+from router import router as songs_router
 
 
 @asynccontextmanager
@@ -17,39 +16,6 @@ async def lifespan(app: FastAPI):
     print("shutdown...")
 
 app = FastAPI(lifespan=lifespan)
+app.include_router(songs_router)
 
-
-class SSongAdd(BaseModel):
-    artist: str
-    title: str
-    youtube_link: str
-
-
-class SSong(SSongAdd):
-    id: int
-    path: str
-
-
-songs_array = []
-
-
-@app.post("/song")
-async def add_song(song: Annotated[SSongAdd, Depends()]) -> dict:
-    # song = SSong(id=1, artist="Anya Nami", title="Wake me up", path="data/", youtube_link="www.youtube.com/wqerty")
-    # song_two = SSong(id=2, artist="Anya Singltone", title="Wale up", path="data/", youtube_link="www.youtube.com/wqeyuio")
-    songs_array.append(song)
-
-    return {"result": "ok",
-            "songs_count": len(songs_array),
-            "youtube_link": song.youtube_link}
-
-
-# @app.get("/songs")
-# def get_songs() -> dict:
-#     song_one = SSong(id=1, artist="Anya Nami", title="Wake me up", path="data/", youtube_link="www.youtube.com/wqerty")
-#     song_two = SSong(id=2, artist="Anya Singltone", title="Wale up", path="data/", youtube_link="www.youtube.com/wqeyuio")
-#
-#     songs_array = [song_one, song_two]
-#
-#     return {"data": songs_array}
 
