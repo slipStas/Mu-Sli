@@ -23,7 +23,8 @@ class SearchURL(BaseModel):
     url: str
 
 
-class FileName(BaseModel):
+class SongInfo(BaseModel):
     name: str
-    # data: FileResponse
+    duration: int
+    ok: bool
 
