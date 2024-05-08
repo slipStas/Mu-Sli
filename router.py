@@ -22,10 +22,23 @@ def load_song(url: str) -> SongInfo:
     duration = yt.stream_monostate.duration
     print(f"\tduration -> {duration}, title: {yt.author}| {yt.title}")
     if yt.author == "":
-        file_name = yt.title.replace("\\", "").replace("/", "").replace("\'", "").replace("\"", "").replace("|", "")
+        file_name = yt.title.replace("\\", "")\
+            .replace("/", "").replace("\'", "")\
+            .replace("\"", "").replace("|", "")
     else:
-        file_name = yt.author.replace("\\", "").replace("/", "").replace("\'", "").replace("\"", "").replace("|", "") + " - " + \
-                    yt.title.replace("\\", "").replace("/", "").replace("\'", "").replace("\"", "").replace(".", "").replace("|", "")
+        file_name = yt.author\
+                        .replace("\\", "")\
+                        .replace("/", "")\
+                        .replace("\'", "")\
+                        .replace("\"", "")\
+                        .replace("|", "") + " - " + \
+                    yt.title\
+                        .replace("\\", "")\
+                        .replace("/", "")\
+                        .replace("\'", "")\
+                        .replace("\"", "")\
+                        .replace(".", "")\
+                        .replace("|", "")
 
     file_name = give_emoji_free_text(file_name) + ".mp4a"
     stream.download("data/", filename=file_name)
