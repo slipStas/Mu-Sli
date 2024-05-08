@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from fastapi.responses import FileResponse
 
 
 class SSongAdd(BaseModel):
@@ -16,4 +17,13 @@ class AddSongResponce(BaseModel):
     result: str = "ok"
     songs_count: int
     songs_id: int
+
+
+class SearchURL(BaseModel):
+    url: str
+
+
+class FileName(BaseModel):
+    name: str
+    # data: FileResponse
 

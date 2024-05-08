@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
+
 from database import delete_tables, create_tables
 from router import router as songs_router
 
