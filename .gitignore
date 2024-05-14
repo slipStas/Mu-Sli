@@ -12,7 +12,7 @@ __pycache__/
 .Python
 .idea
 tasks.db
-musics/
+data/
 build/
 develop-eggs/
 dist/
