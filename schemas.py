@@ -3,10 +3,11 @@ from fastapi.responses import FileResponse
 
 
 class SSongAdd(BaseModel):
-    artist: str
+    author: str
     title: str
-    path: str
-    youtube_link: str
+    file_name: str
+    youtube_id: str
+    duration: int
 
 
 class SSong(SSongAdd):

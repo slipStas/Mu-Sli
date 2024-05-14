@@ -7,45 +7,100 @@ from fastapi.responses import FileResponse
 from pytube import YouTube
 
 from repository import SongsRepository
-from schemas import SSongAdd, SSong, AddSongResponce, SearchURL, SongInfo
+from schemas import SSongAdd, SSong, SearchURL, SongInfo
 
 router = APIRouter(prefix="/song", tags=["Songs"])
 
 
-def load_song(url: str) -> SongInfo:
+def __load_song(url: str) -> SSongAdd:
     yt = YouTube(url, use_oauth=True)
-    # print(f"=============tags: {yt.streams.all}")
     stream = yt.streams.get_by_itag(140)
-    # full_sec = int(yt.stream_monostate.duration / 60)
-    # remained = int(yt.stream_monostate.duration - full_sec) % 60
-    # duration = str(full_sec) + ":" + str(remained)
     duration = yt.stream_monostate.duration
     print(f"\tduration -> {duration}, title: {yt.author}| {yt.title}")
     if yt.author == "":
-        file_name = yt.title.replace("\\", "")\
-            .replace("/", "").replace("\'", "")\
-            .replace("\"", "").replace("|", "")
+        title_yt = yt.title.replace("—", "-")
+        title_array = title_yt.split("-")
+        author_raw = title_array[0].replace("\\", "") \
+            .replace("/", "") \
+            .replace("\'", "") \
+            .replace("\"", "") \
+            .replace("|", "") \
+            .replace(":", "") \
+            .replace("*", "") \
+            .replace("?", "") \
+            .replace("<", "") \
+            .replace(">", "")
+        title_raw = title_array[1].replace("\\", "") \
+            .replace("/", "") \
+            .replace("\'", "") \
+            .replace("\"", "") \
+            .replace("|", "") \
+            .replace(":", "") \
+            .replace("*", "") \
+            .replace("?", "") \
+            .replace("<", "") \
+            .replace(">", "")
+        author = give_emoji_free_text(author_raw)
+        title = give_emoji_free_text(title_raw)
     else:
-        file_name = yt.author\
-                        .replace("\\", "")\
-                        .replace("/", "")\
-                        .replace("\'", "")\
-                        .replace("\"", "")\
-                        .replace("|", "") + " - " + \
-                    yt.title\
-                        .replace("\\", "")\
-                        .replace("/", "")\
-                        .replace("\'", "")\
-                        .replace("\"", "")\
-                        .replace(".", "")\
-                        .replace("|", "")
+        title_yt = yt.title.replace("—", "-")
+        title_array = title_yt.split("-")
+        if len(title_array) > 1:
+            author_raw = title_array[0].replace("\\", "") \
+                .replace("/", "") \
+                .replace("\'", "") \
+                .replace("\"", "") \
+                .replace("|", "") \
+                .replace(":", "") \
+                .replace("*", "") \
+                .replace("?", "") \
+                .replace("<", "") \
+                .replace(">", "")
+            title_raw = title_array[1].replace("\\", "") \
+                .replace("/", "") \
+                .replace("\'", "") \
+                .replace("\"", "") \
+                .replace("|", "") \
+                .replace(":", "") \
+                .replace("*", "") \
+                .replace("?", "") \
+                .replace("<", "") \
+                .replace(">", "")
+            author = give_emoji_free_text(author_raw)
+            title = give_emoji_free_text(title_raw)
+        else:
+            author_raw = yt.author.replace("\\", "") \
+                .replace("/", "") \
+                .replace("\'", "") \
+                .replace("\"", "") \
+                .replace("|", "") \
+                .replace(":", "") \
+                .replace("*", "") \
+                .replace("?", "") \
+                .replace("<", "") \
+                .replace(">", "")
+            title_raw = yt.title.replace("\\", "") \
+                .replace("/", "") \
+                .replace("\'", "") \
+                .replace("\"", "") \
+                .replace("|", "") \
+                .replace(":", "") \
+                .replace("*", "") \
+                .replace("?", "") \
+                .replace("<", "") \
+                .replace(">", "")
+            author = give_emoji_free_text(author_raw)
+            title = give_emoji_free_text(title_raw)
 
-    file_name = give_emoji_free_text(file_name) + ".mp4a"
+    file_name = f"{author} - {title}.mp3"
     stream.download("data/", filename=file_name)
-    song_info = SongInfo(name=file_name,
-                         duration=duration,
-                         ok=True)
-    return song_info
+    song_add = SSongAdd(author=author,
+                        title=title,
+                        file_name=file_name,
+                        youtube_id=yt.video_id,
+                        duration=duration)
+
+    return song_add
 
 
 def give_emoji_free_text(text):
@@ -74,18 +129,30 @@ def give_emoji_free_text(text):
 
 
 @router.post("/search")
-async def get_songs(url: Annotated[SearchURL, Depends()]) -> SongInfo:
-    song_info = load_song(url=url.url)
+async def search_songs(url: Annotated[SearchURL, Depends()]) -> SSong:
+    song_add = __load_song(url=url.url)
+    ssong_add = SSongAdd(author=song_add.author,
+                         title=song_add.title,
+                         file_name=song_add.file_name,
+                         youtube_id=song_add.youtube_id,
+                         duration=song_add.duration)
 
-    return song_info
+    song_id = await SongsRepository.add_song(ssong_add)
+
+    song_responce = SSong(id=song_id,
+                          author=song_add.author,
+                          title=song_add.title,
+                          file_name=song_add.file_name,
+                          youtube_id=song_add.youtube_id,
+                          duration=song_add.duration)
+
+    return song_responce
 
 
 @router.post("", response_class=FileResponse)
-async def search(file_name: Annotated[SongInfo, Depends()]):
+async def get_song(file_name: Annotated[SongInfo, Depends()]):
     print(f"\tyou are want to search: {file_name.name}")
     path = f"data/{file_name.name}"
     print(f"\t{path}")
 
     return path
-
-
