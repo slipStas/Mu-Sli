@@ -12,6 +12,7 @@ class SSongAdd(BaseModel):
 
 class SSong(SSongAdd):
     id: int
+    is_id_in_db: bool
 
 
 class AddSongResponce(BaseModel):
