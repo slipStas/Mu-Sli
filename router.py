@@ -7,7 +7,9 @@ from fastapi.responses import FileResponse
 from pytube import YouTube, Stream
 
 from repository import SongsRepository
-from schemas import SSongAdd, SSong, SearchURL, SongInfo
+from schemas import SSongAdd, SSong, SearchURL, SongInfo, SSongResponce
+
+from datetime import datetime
 
 router = APIRouter(prefix="/song", tags=["Songs"])
 
@@ -93,7 +95,6 @@ def __load_song(url: str) -> (SSongAdd, Stream):
             title = give_emoji_free_text(title_raw)
 
     file_name = f"{author} - {title}.mp3"
-    # stream.download("data/", filename=file_name)
     song_add = SSongAdd(author=author,
                         title=title,
                         file_name=file_name,
@@ -110,17 +111,6 @@ def give_emoji_free_text(text):
     return clean_text
 
 
-# @router.post("")
-# async def add_song(song: Annotated[SSongAdd, Depends()]) -> AddSongResponce:
-#     song_id = await SongsRepository.add_song(song)
-#     songs_dict = await SongsRepository.get_all_songs()
-#
-#     songs_responce = AddSongResponce(songs_count=len(songs_dict),
-#                                      songs_id=song_id)
-#
-#     return songs_responce
-
-
 @router.get("")
 async def get_song_list() -> list[SSong]:
     songs_array = await SongsRepository.get_all_songs()
@@ -129,7 +119,7 @@ async def get_song_list() -> list[SSong]:
 
 
 @router.post("/search")
-async def search_songs(url: Annotated[SearchURL, Depends()]) -> SSong:
+async def search_songs(url: Annotated[SearchURL, Depends()]) -> SSongResponce:
     song_add, stream = __load_song(url=url.url)
     ssong_add = SSongAdd(author=song_add.author,
                          title=song_add.title,
@@ -138,37 +128,44 @@ async def search_songs(url: Annotated[SearchURL, Depends()]) -> SSong:
                          duration=song_add.duration)
 
     is_yt_id, id_db = await SongsRepository.check_yt_id(yt_id=song_add.youtube_id)
+    time_start = datetime.now()
 
     if is_yt_id:
         print("not loading song!")
-        song_responce = SSong(id=id_db,
-                              is_id_in_db=is_yt_id,
-                              author=song_add.author,
-                              title=song_add.title,
-                              file_name=song_add.file_name,
-                              youtube_id=song_add.youtube_id,
-                              duration=song_add.duration)
+        song_responce = SSongResponce(id=id_db,
+                                      is_id_in_db=is_yt_id,
+                                      author=song_add.author,
+                                      title=song_add.title,
+                                      file_name=song_add.file_name,
+                                      youtube_id=song_add.youtube_id,
+                                      duration=song_add.duration)
+        time_stop = datetime.now()
+        time_dif = time_stop - time_start
+        print(f"load time = {time_dif}")
 
         return song_responce
     else:
         stream.download("data/", filename=song_add.file_name)
         print("loading song...")
         song_id = await SongsRepository.add_song(ssong_add)
-        song_responce = SSong(id=song_id,
-                              is_id_in_db=is_yt_id,
-                              author=song_add.author,
-                              title=song_add.title,
-                              file_name=song_add.file_name,
-                              youtube_id=song_add.youtube_id,
-                              duration=song_add.duration)
+        song_responce = SSongResponce(id=song_id,
+                                      is_id_in_db=is_yt_id,
+                                      author=song_add.author,
+                                      title=song_add.title,
+                                      file_name=song_add.file_name,
+                                      youtube_id=song_add.youtube_id,
+                                      duration=song_add.duration)
+        time_stop = datetime.now()
+        time_dif = time_stop - time_start
+        print(f"load time = {time_dif}")
 
         return song_responce
 
 
 @router.post("", response_class=FileResponse)
 async def get_song_data(file_name: Annotated[SongInfo, Depends()]):
-    print(f"\tyou are want to search: {file_name.name}")
-    path = f"data/{file_name.name}"
+    print(f"\tyou are want to search: {file_name.file_name}")
+    path = f"data/{file_name.file_name}"
     print(f"\t{path}")
 
     return path

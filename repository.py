@@ -3,7 +3,7 @@ from typing import Optional
 from sqlalchemy import select
 
 from database import new_session, SongsTable
-from schemas import SSongAdd, SSong
+from schemas import SSongAdd
 
 
 class SongsRepository:
