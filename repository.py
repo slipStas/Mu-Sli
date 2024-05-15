@@ -2,11 +2,18 @@ from typing import Optional
 
 from sqlalchemy import select
 
+import database
 from database import new_session, SongsTable
 from schemas import SSongAdd
 
 
 class SongsRepository:
+    @classmethod
+    async def clear_db(cls) -> bool:
+        await database.delete_tables()
+        await database.create_tables()
+        return True
+
     @classmethod
     async def add_song(cls, data: SSongAdd) -> int:
         async with new_session() as session:

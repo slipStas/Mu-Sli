@@ -117,6 +117,16 @@ async def get_song_list() -> list[SSong]:
 
     return songs_array
 
+@router.delete("")
+async def clear_bd() -> dict:
+    is_cleared = await SongsRepository.clear_db()
+    if is_cleared:
+        status = "ok"
+    else:
+        status = "fail"
+
+    return {"status": status}
+
 
 @router.post("/search")
 async def search_songs(url: Annotated[SearchURL, Depends()]) -> SSongResponce:
