@@ -11,7 +11,7 @@ __pycache__/
 # Distribution / packaging
 .Python
 .idea
-tasks.db
+songs.db
 data/
 build/
 develop-eggs/
