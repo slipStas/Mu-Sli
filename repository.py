@@ -1,7 +1,9 @@
+from typing import Optional
+
 from sqlalchemy import select
 
 from database import new_session, SongsTable
-from schemas import SSongAdd, SSong
+from schemas import SSongAdd
 
 
 class SongsRepository:
@@ -17,12 +19,24 @@ class SongsRepository:
             return song.id
 
     @classmethod
+    async def check_yt_id(cls, yt_id: str) -> (bool, Optional[str]):
+        async with new_session() as session:
+            query = select(SongsTable)
+            result = await session.execute(query)
+            song_list = result.scalars().all()
+            for song in song_list:
+                if yt_id == song.youtube_id:
+                    return True, song.id
+
+            return False, None
+
+    @classmethod
     async def get_all_songs(cls):
         async with new_session() as session:
             query = select(SongsTable)
             result = await session.execute(query)
-            songs_list = result.scalars().all()
+            song_list = result.scalars().all()
 
-            return songs_list
+            return song_list
 
 

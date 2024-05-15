@@ -14,10 +14,11 @@ class SongsTable(Model):
     __tablename__ = "songs"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    artist: Mapped[str]
+    author: Mapped[str]
     title: Mapped[str]
-    path: Mapped[str]
-    youtube_link: Mapped[str]
+    file_name: Mapped[str]
+    youtube_id: Mapped[str]
+    duration: Mapped[int]
 
 
 async def create_tables():
