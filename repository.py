@@ -26,16 +26,25 @@ class SongsRepository:
             return song.id
 
     @classmethod
-    async def check_yt_id(cls, yt_id: str) -> (bool, Optional[str]):
+    async def check_yt_id(cls, yt_id: str) -> (bool, Optional[str], Optional[int]):
         async with new_session() as session:
             query = select(SongsTable)
-            result = await session.execute(query)
-            song_list = result.scalars().all()
-            for song in song_list:
-                if yt_id == song.youtube_id:
-                    return True, song.id
+            result = await session.execute(query.where(SongsTable.youtube_id == yt_id))
+            song_list = result.scalars().first()
+            if song_list is not None:
+                return True, song_list.id, song_list.duration
 
-            return False, None
+            return False, None, None
+
+        # async with new_session() as session:
+        #     query = select(SongsTable)
+        #     result = await session.execute(query)
+        #     song_list = result.scalars().all()
+        #     for song in song_list:
+        #         if yt_id == song.youtube_id:
+        #             return True, song.id
+        #
+        #     return False, None
 
     @classmethod
     async def get_all_songs(cls):

@@ -1,6 +1,6 @@
 import emoji
 
-from typing import Annotated
+from typing import Annotated, Optional
 
 from fastapi import APIRouter, Depends
 from fastapi.responses import FileResponse
@@ -14,11 +14,11 @@ from datetime import datetime
 router = APIRouter(prefix="/song", tags=["Songs"])
 
 
-def __load_song(url: str) -> (SSongAdd, Stream):
-    yt = YouTube(url, use_oauth=True)
-    stream = yt.streams.get_by_itag(140)
-    duration = yt.stream_monostate.duration
-    print(f"\tduration -> {duration}, title: {yt.author}| {yt.title}")
+async def __load_song(url: str) -> (SSongAdd, Optional[Stream], Optional[int]):
+    yt = YouTube(url)
+    print(yt.author, yt.title, yt.video_id)
+    is_yt_id, id_db, duration_db = await SongsRepository.check_yt_id(yt_id=yt.video_id)
+
     if yt.author == "":
         title_yt = yt.title.replace("—", "-")
         title_array = title_yt.split("-")
@@ -95,13 +95,28 @@ def __load_song(url: str) -> (SSongAdd, Stream):
             title = give_emoji_free_text(title_raw)
 
     file_name = f"{author} - {title}.mp3"
-    song_add = SSongAdd(author=author,
-                        title=title,
-                        file_name=file_name,
-                        youtube_id=yt.video_id,
-                        duration=duration)
 
-    return song_add, stream
+    if not is_yt_id:
+        print("loading stream...")
+        stream = yt.streams.get_audio_only()
+        duration = yt.stream_monostate.duration
+
+        song_add = SSongAdd(author=author,
+                            title=title,
+                            file_name=file_name,
+                            youtube_id=yt.video_id,
+                            duration=duration)
+
+        return song_add, stream, id_db
+    else:
+        print("not loading stream...")
+        song_add = SSongAdd(author=author,
+                            title=title,
+                            file_name=file_name,
+                            youtube_id=yt.video_id,
+                            duration=duration_db)
+
+        return song_add, None, id_db
 
 
 def give_emoji_free_text(text):
@@ -117,6 +132,7 @@ async def get_song_list() -> list[SSong]:
 
     return songs_array
 
+
 @router.delete("")
 async def clear_bd() -> dict:
     is_cleared = await SongsRepository.clear_db()
@@ -130,20 +146,19 @@ async def clear_bd() -> dict:
 
 @router.post("/search")
 async def search_songs(url: Annotated[SearchURL, Depends()]) -> SSongResponce:
-    song_add, stream = __load_song(url=url.url)
+    song_add, stream, id_db = await __load_song(url=url.url)
     ssong_add = SSongAdd(author=song_add.author,
                          title=song_add.title,
                          file_name=song_add.file_name,
                          youtube_id=song_add.youtube_id,
                          duration=song_add.duration)
 
-    is_yt_id, id_db = await SongsRepository.check_yt_id(yt_id=song_add.youtube_id)
     time_start = datetime.now()
 
-    if is_yt_id:
+    if stream is None:
         print("not loading song!")
         song_responce = SSongResponce(id=id_db,
-                                      is_id_in_db=is_yt_id,
+                                      is_id_in_db=True,
                                       author=song_add.author,
                                       title=song_add.title,
                                       file_name=song_add.file_name,
@@ -155,11 +170,11 @@ async def search_songs(url: Annotated[SearchURL, Depends()]) -> SSongResponce:
 
         return song_responce
     else:
-        stream.download("data/", filename=song_add.file_name)
         print("loading song...")
+        stream.download("data/", filename=song_add.file_name)
         song_id = await SongsRepository.add_song(ssong_add)
         song_responce = SSongResponce(id=song_id,
-                                      is_id_in_db=is_yt_id,
+                                      is_id_in_db=False,
                                       author=song_add.author,
                                       title=song_add.title,
                                       file_name=song_add.file_name,
