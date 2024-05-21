@@ -1,3 +1,4 @@
+import os
 from typing import Optional
 
 from sqlalchemy import select
@@ -10,9 +11,37 @@ from schemas import SSongAdd
 class SongsRepository:
     @classmethod
     async def clear_db(cls) -> bool:
-        await database.delete_tables()
-        await database.create_tables()
-        return True
+        responce = True
+        folder = "./data"
+        song_list = await SongsRepository.get_all_songs()
+        ssong_list = {}
+        # files_list = []
+        for song in song_list:
+            # print(f"song -- {song.author}")
+            ssong = SSongAdd(author=song.author,
+                             title=song.title,
+                             file_name=song.file_name,
+                             youtube_id=song.youtube_id,
+                             duration=song.duration)
+            ssong_list[ssong.file_name] = ssong
+            # print(f"add:{ssong.file_name}: {ssong.duration}")
+        # print(ssong_list)
+        for file in os.listdir(folder):
+            file_path = os.path.join(folder, file)
+            file_name = file_path.split("/")[2]
+            # print(f"file name:{file_name}|")
+            # os.remove(file_path)
+            if file_name in ssong_list:
+                os.remove(file_path)
+                print(f"remove file: {file_name}")
+            else:
+                print("error from key!!!")
+                responce = False
+
+        if responce:
+            await database.delete_tables()
+            await database.create_tables()
+        return responce
 
     @classmethod
     async def add_song(cls, data: SSongAdd) -> int:
@@ -36,16 +65,6 @@ class SongsRepository:
 
             return False, None, None
 
-        # async with new_session() as session:
-        #     query = select(SongsTable)
-        #     result = await session.execute(query)
-        #     song_list = result.scalars().all()
-        #     for song in song_list:
-        #         if yt_id == song.youtube_id:
-        #             return True, song.id
-        # 11111111
-        #     return False, None
-
     @classmethod
     async def get_all_songs(cls):
         async with new_session() as session:
@@ -54,5 +73,3 @@ class SongsRepository:
             song_list = result.scalars().all()
 
             return song_list
-
-
