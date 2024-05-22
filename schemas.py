@@ -1,3 +1,5 @@
+from typing import Optional
+
 from pydantic import BaseModel
 
 
@@ -7,10 +9,12 @@ class SSongAdd(BaseModel):
     file_name: str
     youtube_id: str
     duration: int
+    file_size: Optional[int]
 
 
 class SSong(SSongAdd):
     id: int
+    # file_size: int
 
 
 class SSongResponce(SSongAdd):

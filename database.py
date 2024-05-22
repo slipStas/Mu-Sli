@@ -1,3 +1,5 @@
+from typing import Optional
+
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
@@ -19,6 +21,7 @@ class SongsTable(Model):
     file_name: Mapped[str]
     youtube_id: Mapped[str]
     duration: Mapped[int]
+    file_size: Mapped[Optional[int]]
 
 
 async def create_tables():

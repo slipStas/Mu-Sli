@@ -1,3 +1,5 @@
+import os.path
+
 import emoji
 
 from typing import Annotated, Optional
@@ -14,10 +16,10 @@ from datetime import datetime
 router = APIRouter(prefix="/song", tags=["Songs"])
 
 
-async def __load_song(url: str) -> (SSongAdd, Optional[Stream], Optional[int]):
+async def __load_song(url: str) -> (SSongAdd, Optional[Stream], Optional[int], Optional[int]):
     yt = YouTube(url)
     print(yt.author, yt.title, yt.video_id)
-    is_yt_id, id_db, duration_db = await SongsRepository.check_yt_id(yt_id=yt.video_id)
+    is_yt_id, id_db, duration_db, file_size_db = await SongsRepository.check_yt_id(yt_id=yt.video_id)
 
     if yt.author == "":
         title_yt = yt.title.replace("—", "-")
@@ -105,18 +107,20 @@ async def __load_song(url: str) -> (SSongAdd, Optional[Stream], Optional[int]):
                             title=title,
                             file_name=file_name,
                             youtube_id=yt.video_id,
-                            duration=duration)
+                            duration=duration,
+                            file_size=file_size_db)
 
-        return song_add, stream, id_db
+        return song_add, stream, id_db, file_size_db
     else:
         print("not loading stream...")
         song_add = SSongAdd(author=author,
                             title=title,
                             file_name=file_name,
                             youtube_id=yt.video_id,
-                            duration=duration_db)
+                            duration=duration_db,
+                            file_size=file_size_db)
 
-        return song_add, None, id_db
+        return song_add, None, id_db, file_size_db
 
 
 def give_emoji_free_text(text):
@@ -146,12 +150,14 @@ async def clear_bd() -> dict:
 
 @router.post("/search")
 async def search_songs(url: Annotated[SearchURL, Depends()]) -> SSongResponce:
-    song_add, stream, id_db = await __load_song(url=url.url)
+    song_add, stream, id_db, file_size_db = await __load_song(url=url.url)
+    # print(f"----- author: {song_add.author}")
     ssong_add = SSongAdd(author=song_add.author,
                          title=song_add.title,
                          file_name=song_add.file_name,
                          youtube_id=song_add.youtube_id,
-                         duration=song_add.duration)
+                         duration=song_add.duration,
+                         file_size=file_size_db)
 
     time_start = datetime.now()
 
@@ -163,7 +169,8 @@ async def search_songs(url: Annotated[SearchURL, Depends()]) -> SSongResponce:
                                       title=song_add.title,
                                       file_name=song_add.file_name,
                                       youtube_id=song_add.youtube_id,
-                                      duration=song_add.duration)
+                                      duration=song_add.duration,
+                                      file_size=song_add.file_size)
         time_stop = datetime.now()
         time_dif = time_stop - time_start
         print(f"load time = {time_dif}")
@@ -172,17 +179,22 @@ async def search_songs(url: Annotated[SearchURL, Depends()]) -> SSongResponce:
     else:
         print("loading song...")
         stream.download("data/", filename=song_add.file_name)
+        file_size = os.path.getsize(f"./data/{song_add.file_name}")
+        ssong_add.file_size = file_size
+        print(f"size of file: {ssong_add.file_size}")
         song_id = await SongsRepository.add_song(ssong_add)
+        print(f"--- song id: {song_id}")
         song_responce = SSongResponce(id=song_id,
                                       is_id_in_db=False,
                                       author=song_add.author,
                                       title=song_add.title,
                                       file_name=song_add.file_name,
                                       youtube_id=song_add.youtube_id,
-                                      duration=song_add.duration)
+                                      duration=song_add.duration,
+                                      file_size=song_add.file_size)
         time_stop = datetime.now()
         time_dif = time_stop - time_start
-        print(f"load time = {time_dif}")
+        print(f"load time = {time_dif}, file size = {ssong_add.file_size}")
 
         return song_responce
 

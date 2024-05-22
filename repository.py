@@ -55,15 +55,28 @@ class SongsRepository:
             return song.id
 
     @classmethod
-    async def check_yt_id(cls, yt_id: str) -> (bool, Optional[str], Optional[int]):
+    async def add_file_size(cls, yt_id: str, size: int) -> bool:
+        async with new_session() as session:
+            query = select(SongsTable)
+            result = await session.execute(query.where(SongsTable.youtube_id == yt_id))
+            song = result.scalars().first()
+            if song is not None:
+                song.file_size = size
+                session.commit()
+                return True
+            else:
+                return False
+
+    @classmethod
+    async def check_yt_id(cls, yt_id: str) -> (bool, Optional[str], Optional[int], Optional[int]):
         async with new_session() as session:
             query = select(SongsTable)
             result = await session.execute(query.where(SongsTable.youtube_id == yt_id))
             song_list = result.scalars().first()
             if song_list is not None:
-                return True, song_list.id, song_list.duration
+                return True, song_list.id, song_list.duration, song_list.file_size
 
-            return False, None, None
+            return False, None, None, None
 
     @classmethod
     async def get_all_songs(cls):
