@@ -151,7 +151,6 @@ async def clear_bd() -> dict:
 @router.post("/search")
 async def search_songs(url: Annotated[SearchURL, Depends()]) -> SSongResponce:
     song_add, stream, id_db, file_size_db = await __load_song(url=url.url)
-    # print(f"----- author: {song_add.author}")
     ssong_add = SSongAdd(author=song_add.author,
                          title=song_add.title,
                          file_name=song_add.file_name,
@@ -183,7 +182,6 @@ async def search_songs(url: Annotated[SearchURL, Depends()]) -> SSongResponce:
         ssong_add.file_size = file_size
         print(f"size of file: {ssong_add.file_size}")
         song_id = await SongsRepository.add_song(ssong_add)
-        print(f"--- song id: {song_id}")
         song_responce = SSongResponce(id=song_id,
                                       is_id_in_db=False,
                                       author=song_add.author,

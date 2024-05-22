@@ -22,7 +22,8 @@ class SongsRepository:
                              title=song.title,
                              file_name=song.file_name,
                              youtube_id=song.youtube_id,
-                             duration=song.duration)
+                             duration=song.duration,
+                             file_size=song.file_size)
             ssong_list[ssong.file_name] = ssong
             # print(f"add:{ssong.file_name}: {ssong.duration}")
         # print(ssong_list)

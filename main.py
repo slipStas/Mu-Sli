@@ -20,3 +20,6 @@ app = FastAPI(lifespan=lifespan)
 app.include_router(songs_router)
 
 
+#  client "ANDROID_CREATOR"
+#  python -m pip install git+https://github.com/msemple1111/pytube
+#  cipher.py: line 411-   transform_plan_raw = js
