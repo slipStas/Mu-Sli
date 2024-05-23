@@ -24,8 +24,8 @@ class SSongResponce(SSongAdd):
 
 class AddSongResponce(BaseModel):
     result: str = "ok"
-    songs_count: int
-    songs_id: int
+    song: Optional[SSong]
+    error: Optional[str]
 
 
 class SearchURL(BaseModel):
