@@ -21,7 +21,16 @@ class SongsTable(Model):
     file_name: Mapped[str]
     youtube_id: Mapped[str]
     duration: Mapped[int]
-    file_size: Mapped[Optional[int]]
+    file_size_db: Mapped[Optional[int]]
+    is_in_data: Mapped[bool]
+
+
+class UsingBytesTable(Model):
+    __tablename__ = "using_bytes"
+
+    files_size: Mapped[int] = mapped_column(primary_key=True)
+    files_count: Mapped[int]
+    max_data_size: Mapped[int]
 
 
 async def create_tables():
