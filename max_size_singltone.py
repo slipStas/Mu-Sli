@@ -10,3 +10,6 @@ class __Singltone(object):
 class MaxSize(__Singltone):
     max_size = 10 * 1024 * 1024 * 1024
 
+
+class YTLink(__Singltone):
+    yt_link = "https://youtu.be/"
